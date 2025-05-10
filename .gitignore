@@ -1,4 +1,3 @@
-.env
 1.0
 Transcript/
 .idea
@@ -6,5 +5,14 @@ Transcript/
 *.ipynb
 
 # all pychaches (also nested)
-__pycache__/*
+**/__pycache__/*
+.env
+**/node_modules
 
+## Ignore all env variables
+*.env
+
+**/Voicebot_transcripts/
+
+**/memory/
+**/memory_dell/
