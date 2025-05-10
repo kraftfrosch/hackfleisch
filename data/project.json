@@ -1,0 +1,40 @@
+{
+  "name": "CDTM Hackathon",
+  "description": "A 2 day hackathon in munich to build AI agents to automate real world processes end-to-end. The team works 36 hours to come up with an idea, business case and to build a prototype until late at night. All will lead to a final pitch to present the idea, technology and the business case to a jury of experts.",
+  "goal": "Build a working version of an AI agent faciliating real-time feedback and culture mining in a company.",
+  "startDate": "2025-05-10",
+  "endDate": "2025-05-11",
+  "status": "completed",
+  "team": [
+    {
+      "name": "Vishwa Singh",
+      "role": "Hacker",
+      "responsibilities": "Building the frontend to show the dashboard with the employee profile and the analytics of the feedback."
+    },
+    {
+      "name": "Johannes Michalke",
+      "role": "Hacker",
+      "responsibilities": "Building the backend to store the feedback and the analytics."
+    },
+    {
+      "name": "Fabian Hildesheim",
+      "role": "Hacker",
+      "responsibilities": "Faciliating a good team spirit, owning the video production for the final submission and sharpening the business case."
+    },
+    {
+      "name": "Joshua Kraft",
+      "role": "Hacker",
+      "responsibilities": "Creating test data and prompt engineering for the AI agents."
+    }
+  ],
+  "updates": [
+    {
+      "date": "2025-05-10",
+      "description": "We had a long brainstroming session on friday to come up with the idea for the hackathon. We pitched our ideas to the judges and got feedback on them."
+    },
+    {
+      "date": "2025-05-11",
+      "description": "We built the prototype of the AI agent and the backend to store the feedback. We also created a frontend to show the dashboard with the employee profile and the analytics of the feedback."
+    }
+  ]
+}

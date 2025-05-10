@@ -1,1 +1,10 @@
 .env
+1.0
+Transcript/
+.idea
+# all jupyter notebooks
+*.ipynb
+
+# all pychaches (also nested)
+__pycache__/*
+

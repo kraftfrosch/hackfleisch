@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "type": "rating",
+    "question": "How strongly do you feel Joshua's demonstrate his ability to push through blockers or organizational boundaries to deliver on his responsibilities like securing the initial meeting with SAP?",
+    "options": [
+      { "rating": 1, "label": "Not at all" },
+      { "rating": 2, "label": "Slightly" },
+      { "rating": 3, "label": "Moderately" },
+      { "rating": 4, "label": "Strongly" },
+      { "rating": 5, "label": "Very strongly" }
+    ]
+  },
+  {
+    "id": 2,
+    "type": "rating",
+    "question": "What has been your overall impression on the impact of Vishwa for getting the first version of the website up and running on time?",
+    "options": [
+      { "rating": 1, "label": "His efforts did not make a difference" },
+      {
+        "rating": 2,
+        "label": "He was of moderate help for getting this out the door"
+      },
+      { "rating": 3, "label": "He was a reliable contributor to the success" },
+      {
+        "rating": 4,
+        "label": "His contibutions were essential for the success"
+      },
+      {
+        "rating": 5,
+        "label": "Would have been impossible without Vishwa's efforts"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "type": "open",
+    "question": "What areas of improvement and progression did you notice during the external Workshop with BOSCH for Fabian in respect of making everyone feel heard and valued?"
+  },
+  {
+    "id": 4,
+    "type": "open",
+    "question": "Which of these skills do you see as Johannes's unique strengths?",
+    "options": [
+      "Communication",
+      "Technical Expertise",
+      "Leadership",
+      "Collaboration",
+      "Problem Solving"
+    ]
+  }
+]
