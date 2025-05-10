@@ -12,3 +12,4 @@ __pycache__/*
 ## Ignore all env variables
 *.env
 
+**/Voicebot_transcripts/
