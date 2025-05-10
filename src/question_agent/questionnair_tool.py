@@ -1,3 +1,4 @@
+import json
 from langchain_core.tools import tool
 from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import Literal
@@ -15,11 +16,12 @@ class Question(BaseModel):
 
 class Questionnaire(BaseModel):
     questionnaire_id: int = Field(description="The id of the questionnaire")
+    employee_name: str = Field(description="The name of the employee the feedback survey is about")
     questions: list[Question] = Field(description="The list of questions to be asked")
     
 
 @tool("create_questionnaire", args_schema=Questionnaire)
-def create_questionnaire(questionnaire_id: int, questions: list[Question]) -> str:
+def create_questionnaire(questionnaire_id: int, employee_name: str,questions: list[Question]) -> str:
     """
     Creates a feedback questionnaire based of individualized questions from the context of an employee.
 
@@ -35,6 +37,27 @@ def create_questionnaire(questionnaire_id: int, questions: list[Question]) -> st
     Returns:
         A link to the questionnaire to be filled out
     """
+
+    # Creates a string with all the questions with newlines between them
+    questions_string = "\n".join([question.question for question in questions])
+
+    # Creates a prompt for a call agent to conduct a video call to ask the questions and follow up where needed.
+    prompt = f"""
+    You are an AI assistant conducting a feedback call with a coworker of {employee_name}. The goal of the call is to gather honest, constructive feedback to support their professional development and performance growth. Keep the call focused, respectful, and efficient—do not veer off-topic or engage in small talk. Your tone should be neutral and professional at all times.
+
+    Ask each of the following questions clearly and wait for a complete response before proceeding. Where appropriate, ask brief follow-up questions to clarify vague statements, request specific examples, or guide the feedback toward development-oriented insights. Follow-up questions should be used to improve the quality of responses by making them more actionable and relevant to performance and growth. Use best practices for effective feedback collection—focus on behavior, outcomes, and potential improvements.
+
+    Here are the questions to ask:
+
+    {questions_string}
+
+    End the call by thanking the coworker for their time and thoughtful input. Let them know their responses will be kept confidential and used solely to support {employee_name}’s development.
+    """
+
+    with open("../../data/survey_prompt.json", "w") as f:
+        f.write(json.dumps({"call_id": questionnaire_id, "call_prompt": prompt}))
+    # subprocess.run(["bash", "...", "-.", "survey_prompt.json"])
+
 
     print(questionnaire_id, questions)
     return "https://www.google.com"
