@@ -13,3 +13,6 @@ Transcript/
 *.env
 
 **/Voicebot_transcripts/
+
+**/memory/
+**/memory_dell/

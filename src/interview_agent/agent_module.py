@@ -1,41 +1,70 @@
 from langchain_openai import ChatOpenAI
+from langchain_core.messages import SystemMessage
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from questionnair_tool import create_questionnaire, get_employee_context, call_coworker
-
+from memory import (
+    WRAP_FUNCTION_MAPPING,
+    MemoryItem,
+    Role,
+    MEMORY_DELL_DIR,
+    save_memory_general,
+    load_memory_general,
+)
 # Initialize the LLM
 llm = ChatOpenAI(
     model="gpt-4-turbo-preview",
     temperature=0
 )
+from langchain import hub
+
 
 # Define the system message
-system_message = """You are an expert HR assistant specialized in creating personalized feedback questionnaires.
-Your task is to help create detailed feedback questionnaires for employees based on their project involvement, competencies, and growth goals.
-Use the provided tools to gather employee context and create appropriate questionnaires.
-Always ensure the questions are specific, relevant, and aligned with the employee's development goals."""
+system_message = """You are an expert HR assistant specialized in feedback management. Your main job is to assist the user with feedback management.
+You have tools to access the employee informations, create feedback and send feedback calls to people.
+Use create questionaire to make a questionaire for an employee. To get employee data, use get_employee_context, and to forward the survey, use call_coworker."""
 
 # Create the prompt template
-prompt = ChatPromptTemplate.from_messages([
-    ("system", system_message),
-    MessagesPlaceholder(variable_name="chat_history"),
-    ("human", "{input}"),
-    MessagesPlaceholder(variable_name="agent_scratchpad"),
-])
+# prompt = ChatPromptTemplate.from_messages([
+#     ("system", system_message),
+#     MessagesPlaceholder(variable_name="chat_history"),
+#     ("human", "{input}"),
+#     MessagesPlaceholder(variable_name="agent_scratchpad"),
+# ])
 
-# Define the tools
-tools = [create_questionnaire, get_employee_context, call_coworker]
 
-# Create the agent
-agent = create_openai_functions_agent(llm, tools, prompt)
+def save_message_history_for(chat_id: str, messages: list[MemoryItem]) -> None:
+        save_memory_general(chat_id, messages, MEMORY_DELL_DIR)
 
-# Create the agent executor
-agent_executor = AgentExecutor(
-    agent=agent,
-    tools=tools,
-    verbose=True,
-    handle_parsing_errors=True
-)
+def run_agent(user_input: str, chat_id: int) -> str:
+    memory_items = load_memory_general(chat_id, MEMORY_DELL_DIR)
+    messages = [SystemMessage(system_message)] + [
+            WRAP_FUNCTION_MAPPING[item.role](content=item.content)
+            for item in memory_items
+        ]
+    
+    # Define the tools
+    tools = [create_questionnaire, get_employee_context, call_coworker]
+    prompt = hub.pull("hwchase17/openai-tools-agent")
 
-def run_agent(user_input: str, chat_history: list[dict]) -> str:
-    return agent_executor.invoke({"input": user_input, "chat_history": chat_history})
+    # Create the agent
+    agent = create_openai_functions_agent(llm, tools, prompt)
+    agent_executor = AgentExecutor(
+        agent=agent,
+        tools=tools,
+        verbose=True,
+        handle_parsing_errors=True
+    )
+    response = agent_executor.invoke({"input": user_input, "chat_history": messages})
+    text_resp = response["output"]
+
+    ## Saving memory
+    memory_items.append(MemoryItem(role=Role.USER, content=user_input))
+    memory_items.append(MemoryItem(role=Role.ASSISTANT, content=text_resp))
+    save_message_history_for(chat_id, memory_items)
+
+    return text_resp
+
+
+if __name__ == '__main__':
+    run_agent('Can you send it to Vishwa?', 1)
