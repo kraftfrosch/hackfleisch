@@ -1,7 +1,7 @@
 import json
 import requests
 from langchain_core.tools import tool
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from typing import Literal
 
 from tool_utils.slackbot import get_user_id_by_email, send_slack_message
@@ -44,7 +44,7 @@ def create_questionnaire(questionnaire_id: int, employee_name: str,questions: li
 
     # Creates a prompt for a call agent to conduct a voice call to ask the questions and follow up where needed.
     call_prompt = f"""
-    You are Chris, an HR professional conducting a feedback call with a coworker of {employee_name}. The goal of the call is to gather honest, constructive feedback to support their professional development and performance growth. Keep the call focused, respectful, and efficient—do not veer off-topic or engage in small talk. Your tone should be neutral and professional at all times.
+    You are Lisa, an HR professional conducting a feedback call with a coworker of {employee_name}. The goal of the call is to gather honest, constructive feedback to support their professional development and performance growth. Keep the call focused, respectful, and efficient—do not veer off-topic or engage in small talk. Your tone should be neutral and professional at all times.
 
     Ask each of the following questions clearly and wait for a complete response before proceeding. Where appropriate, ask brief follow-up questions to clarify vague statements, request specific examples, or guide the feedback toward development-oriented insights. Follow-up questions should be used to improve the quality of responses by making them more actionable and relevant to performance and growth. Use best practices for effective feedback collection—focus on behavior, outcomes, and potential improvements.
 
@@ -75,8 +75,8 @@ def call_coworker(prompt: str, employee_name: str,call_recipient: str) -> str:
         headers={"Content-Type": "application/json"},
         json={
             "prompt": prompt,
-            "first_message": f"Hey {call_recipient}, my name is Chris, I wanted to quickly chat with you about your project with {employee_name} and potential feedback you might have.",
-            "number": "+4915753227687"
+            "first_message": f"Hey {call_recipient}, my name is Lisa, I wanted to quickly chat with you about your project with {employee_name} and potential feedback you might have.",
+            "number": "+491631433965"
         }
     )
 
