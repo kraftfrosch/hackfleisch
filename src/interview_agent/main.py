@@ -32,11 +32,17 @@ async def invoke_agent(request: AgentRequest):
         # Add assistant response to history
         chat_histories[chat_id].append({"role": "assistant", "content": result})
         
-        return {
-            "response": result,
-            "chat_id": chat_id,
-            "history": chat_histories[chat_id]
-        }
+        # Check if result is a function call or just a message
+        if isinstance(result, dict) in result:
+            return {
+                "response": result,
+                "chat_id": chat_id,
+            }
+        else:
+            return {
+                "response": str(result),
+                "chat_id": chat_id,
+            }
     except Exception as e:
         return {"error": str(e)}
 
