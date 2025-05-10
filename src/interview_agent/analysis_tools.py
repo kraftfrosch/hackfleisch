@@ -1,6 +1,5 @@
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
-
 from supabase_client import SUPABASE_CLIENT
 
 import ast
@@ -29,36 +28,22 @@ def convert_transcript_to_text(transcript_obj):
 
 
 @tool("get_feedback_transcripts")
-def get_feedback_transcripts(employee_name: str, conversation_count: int = 1) -> str:
+def get_feedback_transcripts(employee_name: str) -> list[str] | str:
     """
     Get the last n conducted feedback interviews about an employee
 
     Args:
         employee_name (str): The name of the employee to get feedback transcripts for
-        conversation_count (int): The number of conversations to return
 
     Returns:
-        str: A string containing the transcripts of the last n conducted feedback interviews about the employee
+        list[str]: A list of strings containing the transcripts of the last n conducted feedback interviews about the employee
     """
-    response = SUPABASE_CLIENT.table("hack_conversations").select("transcript").order('start_time', desc=True).limit(conversation_count).execute()
-    response = [convert_transcript_to_text(transcript) for transcript in response.data]
-    return response
-
-def get_relevant_competency_model(employee_name: str) -> str:
-    """
-    Get the relevant competeciy levels for an employee
-    """
-
-    relevant_competency_model = """
-    Name: Ownership for collective achievement
-    Description: Understand what needs to be done, take ownership of getting it over the finish line and do whatever it takes to get there while driving collective success
-    Level 1: Consistently completes tasks to the expected time and quality, communicating any delays immediately.
-    Level 2: Proficiently defines challenging and impactful goals and takes ownership for achieving them.
-    Level 3: Shows great resilience in pushing through blockers, pushback, politics, or organizational boundaries to get things done.
-    Level 4: Leads by example, consistently setting the standard for ownership, execution, and accountability across teams.
-    """
-
-    return relevant_competency_model
+    response = SUPABASE_CLIENT.table("hack_conversations").select("transcript").eq("about_employee_name", employee_name).execute()
+    if len(response.data) >= 1:
+        response = [convert_transcript_to_text(transcript) for transcript in response.data]
+        return response
+    else:
+        return "No feedback transcripts found for the employee"
 
 
 from typing import Literal
@@ -70,30 +55,33 @@ class Justification(BaseModel):
 
 class CompetencyRating(BaseModel):
     competency_name: str = Field(description="The name of the competency")
+    competency_description: str = Field(description="The description of the competency including all the level descriptions")
     employee_level: int = Field(description="The level of the employee between 1 and 4")
-    level_description: str = Field(description="The description of the level")
     justifications: list[Justification] = Field(description="The justifications for the competency rating")
 
 
-@tool("gives_competency_rating", args_schema=CompetencyRating)
-def gives_competency_rating(competency_name: str, employee_level: int, level_description: str, justifications: list[Justification]) -> str:
+@tool("gives_competency_rating", args_schema=list[CompetencyRating])
+def gives_competency_rating(competency_ratings: list[CompetencyRating]) -> str:
     """
-    Give a employee a competency rating based on their competency model and transcripts of the feedback conversations.
+    Give an employee a rating for each competency based on the competency descriptions and transcripts of the feedback conversations.
 
-    The rating should be created by comparing the feedback conversations to the competency descriptions and the employee's level in the competency model. The rating is paired with justifications which make clear why the rating was given and provide actionabel feedback for the employee.
+    The rating should be created by comparing the feedback conversations to the competency descriptions and the employee's level and next level in the competency model. The rating is paired with justifications which make clear why the rating was given and provide actionabel feedback for the employee based on quotes from the human during the conversation.
 
     Returns:
         str: A string containing the competency rating
     """
+    try:
+        for i, competency_rating in enumerate(competency_ratings):
+            SUPABASE_CLIENT.table("employee").insert({
+                f"competency_name{i+1}": competency_rating.competency_name,
+                f"competency_description{i+1}": competency_rating.competency_description,
+                f"competency_currentlevel{i+1}": competency_rating.employee_level,
+                f"justifications{i+1}": [justification.model_dump() for justification in competency_rating.justifications]
+            }).execute()
+    except Exception as e:
+        return f"Error giving competency ratings: {e}"
 
-    rating_json = {
-        "competency_name": competency_name,
-        "employee_level": employee_level,
-        "level_description": level_description,
-        "justifications": justifications
-    }
-    
-    return json.dumps(rating_json)
+    return "Competency ratings given successfully"
 
 
 
