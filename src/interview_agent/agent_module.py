@@ -1,7 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from questionnair_tool import create_questionnaire, get_employee_context, send_feedback_questionnaire_message
+from questionnair_tool import create_questionnaire, get_employee_context, call_coworker
 
 # Initialize the LLM
 llm = ChatOpenAI(
@@ -24,7 +24,7 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 
 # Define the tools
-tools = [create_questionnaire, get_employee_context, send_feedback_questionnaire_message]
+tools = [create_questionnaire, get_employee_context, call_coworker]
 
 # Create the agent
 agent = create_openai_functions_agent(llm, tools, prompt)
@@ -37,5 +37,5 @@ agent_executor = AgentExecutor(
     handle_parsing_errors=True
 )
 
-def run_agent(user_input: str) -> str:
-    return agent_executor.invoke({"input": user_input, "chat_history": []})
+def run_agent(user_input: str, chat_history: list[dict]) -> str:
+    return agent_executor.invoke({"input": user_input, "chat_history": chat_history})
