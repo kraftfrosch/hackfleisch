@@ -1,0 +1,8 @@
+# all jupyter notebooks
+*.ipynb
+
+# all pychaches
+__pycache__/*
+
+
+.env
