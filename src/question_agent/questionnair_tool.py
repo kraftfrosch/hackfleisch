@@ -1,3 +1,4 @@
+import json
 from langchain_core.tools import tool
 from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import Literal
@@ -52,6 +53,10 @@ def create_questionnaire(questionnaire_id: int, employee_name: str,questions: li
 
     End the call by thanking the coworker for their time and thoughtful input. Let them know their responses will be kept confidential and used solely to support {employee_name}’s development.
     """
+
+    with open("../../data/survey_prompt.json", "w") as f:
+        f.write(json.dumps({"call_id": questionnaire_id, "call_prompt": prompt}))
+    # subprocess.run(["bash", "...", "-.", "survey_prompt.json"])
 
 
     print(questionnaire_id, questions)
