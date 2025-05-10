@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import SystemMessage
-from questionnair_tool import create_questionnaire, get_employee_context
+from questionnair_tool import create_questionnaire, get_employee_context, send_feedback_questionnaire_message
 
 # Initialize the LLM
 llm = ChatOpenAI(
@@ -11,10 +11,10 @@ llm = ChatOpenAI(
 )
 
 # Define the system message
-system_message = SystemMessage(content="""You are an expert HR assistant specialized in creating personalized feedback questionnaires.
+system_message = """You are an expert HR assistant specialized in creating personalized feedback questionnaires.
 Your task is to help create detailed feedback questionnaires for employees based on their project involvement, competencies, and growth goals.
 Use the provided tools to gather employee context and create appropriate questionnaires.
-Always ensure the questions are specific, relevant, and aligned with the employee's development goals.""")
+Always ensure the questions are specific, relevant, and aligned with the employee's development goals."""
 
 # Create the prompt template
 prompt = ChatPromptTemplate.from_messages([
@@ -25,7 +25,7 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 
 # Define the tools
-tools = [create_questionnaire, get_employee_context]
+tools = [create_questionnaire, get_employee_context, send_feedback_questionnaire_message]
 
 # Create the agent
 agent = create_openai_functions_agent(llm, tools, prompt)
@@ -48,8 +48,8 @@ def run_agent(user_input: str) -> str:
     Returns:
         The agent's response
     """
-    return agent_executor.invoke({"input": user_input})
+    return agent_executor.invoke({"input": user_input, "chat_history": []})
 
 if __name__ == "__main__":
-    response = run_agent("Create a feedback questionnaire for Fabian")
+    response = run_agent("Create a feedback questionnaire for Fabian and then send it to me@johannesmichalke.com")
     print(response) 

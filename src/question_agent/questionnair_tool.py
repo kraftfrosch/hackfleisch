@@ -18,8 +18,8 @@ class Questionnaire(BaseModel):
     questions: list[Question] = Field(description="The list of questions to be asked")
     
 
-@tool("create_questionnaire", args_schema=Questionnaire, return_direct=False)
-def create_questionnaire(questionnaire_id: int, questions: list[Question]) -> None:
+@tool("create_questionnaire", args_schema=Questionnaire)
+def create_questionnaire(questionnaire_id: int, questions: list[Question]) -> str:
     """
     Creates a feedback questionnaire based of individualized questions from the context of an employee.
 
@@ -32,10 +32,12 @@ def create_questionnaire(questionnaire_id: int, questions: list[Question]) -> No
     "Do you recall any specific situations where Johannes showed exceptional strong negotiation skills and why it impressed you?"
     "How do you feel Lisa handled the conflict around the project escalation from Jürgen (BMW) as a project lead?"
 
+    Returns:
+        A link to the questionnaire to be filled out
     """
-    print("QUESTIONNAIRE TOOL WAS CALLED!")
+
     print(questionnaire_id, questions)
-    return "Questionnaire created successfully"
+    return "https://www.google.com"
 
 @tool("send_feedback_questionnaire_message")
 def send_feedback_questionnaire_message(receipients: list[str], questionnaire_link: str) -> list[str]:
@@ -43,7 +45,7 @@ def send_feedback_questionnaire_message(receipients: list[str], questionnaire_li
     Sends a reminder to the list of receipients to fill out the feedback questionnaire.
 
     Args:
-        receipients: The list of receipients to send the message to
+        receipients: The list of receipient emails to send the message to
         questionnaire_link: The link to the feedback questionnaire
 
     Returns:
