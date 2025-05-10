@@ -3,7 +3,7 @@ from langchain_core.tools import tool
 from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import Literal
 
-from slackbot import get_user_id_by_email, send_slack_message
+from tool_utils.slackbot import get_user_id_by_email, send_slack_message
 
 class Option(BaseModel):
     rating: int = Field(description="The rating of the option from 1 to 6. Is None for Questions of type choice.")

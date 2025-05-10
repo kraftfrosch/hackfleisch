@@ -1,7 +1,6 @@
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import SystemMessage
 from questionnair_tool import create_questionnaire, get_employee_context, send_feedback_questionnaire_message
 
 # Initialize the LLM
@@ -39,17 +38,4 @@ agent_executor = AgentExecutor(
 )
 
 def run_agent(user_input: str) -> str:
-    """
-    Run the agent with the given user input.
-    
-    Args:
-        user_input: The user's input/query
-        
-    Returns:
-        The agent's response
-    """
     return agent_executor.invoke({"input": user_input, "chat_history": []})
-
-if __name__ == "__main__":
-    response = run_agent("Create a feedback questionnaire for Fabian and then send it to me@johannesmichalke.com")
-    print(response) 
