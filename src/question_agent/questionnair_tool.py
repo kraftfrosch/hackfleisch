@@ -2,6 +2,8 @@ from langchain_core.tools import tool
 from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import Literal
 
+from slackbot import get_user_id_by_email, send_slack_message
+
 class Option(BaseModel):
     rating: int = Field(description="The rating of the option from 1 to 6. Is None for Questions of type choice.")
     label: str = Field(description="The label of the option.")
@@ -34,6 +36,29 @@ def create_questionnaire(questionnaire_id: int, questions: list[Question]) -> No
     print("QUESTIONNAIRE TOOL WAS CALLED!")
     print(questionnaire_id, questions)
     return "Questionnaire created successfully"
+
+@tool("send_feedback_questionnaire_message")
+def send_feedback_questionnaire_message(receipients: list[str], questionnaire_link: str) -> list[str]:
+    """
+    Sends a reminder to the list of receipients to fill out the feedback questionnaire.
+
+    Args:
+        receipients: The list of receipients to send the message to
+        questionnaire_link: The link to the feedback questionnaire
+
+    Returns:
+        A list of the receipients that were sent the message
+    """
+    
+    for user in receipients:
+        if user_id := get_user_id_by_email(user):
+            message = f"Hi there! Please take some time to jump on a call and give some feedback on {user}. Here is the link: {questionnaire_link}"
+            send_slack_message(user_id, message)
+        else:
+            receipients.remove(user)
+            print(f"User {user} not found.")
+
+    print(receipients)
 
 
 @tool("get_employee_context")

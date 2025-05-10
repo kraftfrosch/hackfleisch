@@ -26,15 +26,6 @@ def get_user_id_by_email(email):
         print(f"Error fetching user ID: {e.response['error']}")
         return None
 
-def send_link_to_users(users, link, feedbacked_user_name):
-    message = f"Hi there! Please take some time to jump on a call and give some feedback on {feedbacked_user_name}. Here is the link: {link}"
-    for user in users:
-        user_id = get_user_id_by_email(user)
-        if user_id:
-            send_slack_message(user_id, message)
-        else:
-            print(f"User {user} not found.")
-
 def confirm_feedback(originator_email, user_email, feedbacked_user_email):
     originator_id = get_user_id_by_email(originator_email)
     user_id = get_user_id_by_email(user_email)
