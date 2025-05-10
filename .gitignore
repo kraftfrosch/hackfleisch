@@ -5,7 +5,7 @@ Transcript/
 *.ipynb
 
 # all pychaches (also nested)
-__pycache__/*
+**/__pycache__/*
 .env
 **/node_modules
 
@@ -13,3 +13,6 @@ __pycache__/*
 *.env
 
 **/Voicebot_transcripts/
+
+**/memory/
+**/memory_dell/
