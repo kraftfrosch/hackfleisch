@@ -95,14 +95,44 @@ def get_conversation_info(conversation_id: str) -> TranscriptInfo:
         call_duration=call_duration
     )
 
+def ensure_hack_conversations_table():
+    """
+    Ensure the hack_conversations table exists with all required columns.
+    """
+    try:
+        # Create table with all required columns
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS hack_conversations (
+            conversation_id text PRIMARY KEY,
+            start_time timestamp with time zone,
+            call_duration_secs integer,
+            first_message text,
+            summary text,
+            transcript jsonb,
+            message_count integer,
+            status text,
+            agent_name text,
+            agent_id text,
+            person text
+        );
+        """
+        supabase.rpc('exec_sql', {'query': create_table_query}).execute()
+        print("Created hack_conversations table")
+            
+    except Exception as e:
+        print(f"Error ensuring hack_conversations table: {str(e)}")
+
 def store_conversation_in_supabase(conversation_data: dict):
     """
-    Store conversation data in Supabase interview table.
+    Store conversation data in Supabase hack_conversations table.
     
     Args:
         conversation_data (dict): Dictionary containing conversation information
     """
     try:
+        # Ensure table exists
+        ensure_hack_conversations_table()
+        
         # Convert datetime to ISO format string
         conversation_data['start_time'] = conversation_data['start_time'].isoformat()
         
@@ -110,7 +140,7 @@ def store_conversation_in_supabase(conversation_data: dict):
         conversation_data['transcript'] = json.dumps(conversation_data['transcript'])
         
         # Insert data into Supabase
-        result = supabase.table('interview').insert(conversation_data).execute()
+        result = supabase.table('hack_conversations').insert(conversation_data).execute()
         
         if hasattr(result, 'error') and result.error:
             print(f"Error storing conversation {conversation_data['conversation_id']}: {result.error}")
