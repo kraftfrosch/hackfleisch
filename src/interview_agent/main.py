@@ -10,9 +10,17 @@ from memory import (
     save_memory_general,
     load_memory_general,
 )
+from fastapi.middleware.cors import CORSMiddleware
 import uuid
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # In-memory storage for chat histories
 
