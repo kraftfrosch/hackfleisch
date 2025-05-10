@@ -4,7 +4,7 @@ Transcript/
 # all jupyter notebooks
 *.ipynb
 
-# all pychaches
+# all pychaches (also nested)
 __pycache__/*
 .env
 **/node_modules
