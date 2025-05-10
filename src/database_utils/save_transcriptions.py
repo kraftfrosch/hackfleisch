@@ -6,11 +6,40 @@ from datetime import datetime
 from supabase import create_client, Client
 import os
 import json
+from transformers import pipeline
 
 # Initialize Supabase client
 db_web_link = "https://hkqvoplmxbycptpqjghe.supabase.co"
 keyy = os.getenv('SUPABASE_KEY', "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrcXZvcGxteGJ5Y3B0cHFqZ2hlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0Njg2ODA4MywiZXhwIjoyMDYyNDQ0MDgzfQ.wLT-6nThQhgXGREUEThA5Uzb6KcrU8ITwgGfTI_dd5A")
 supabase: Client = create_client(db_web_link, keyy)
+
+# Initialize zero-shot classifier
+classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+
+def classify_person(summary: str) -> str:
+    """
+    Use zero-shot classification to identify the person in the conversation.
+    
+    Args:
+        summary (str): The conversation summary
+        
+    Returns:
+        str: The identified person's name
+    """
+    candidate_labels = ["Vishwa", "Johannes", "Joshua", "Fabian", "Unknown"]
+    
+    # Get classification results
+    result = classifier(summary, candidate_labels)
+    
+    # Get the label with highest score
+    predicted_label = result['labels'][0]
+    confidence = result['scores'][0]
+    
+    # If confidence is too low, return Unknown
+    if confidence < 0.3:
+        return "Unknown"
+    
+    return predicted_label
 
 @dataclass
 class TranscriptInfo:
@@ -115,6 +144,9 @@ def get_agent_conversations(agent_id: str) -> pd.DataFrame:
         if conv.agent_id == agent_id:
             try:
                 info = get_conversation_info(conv.conversation_id)
+                # Classify the person in the conversation
+                person = classify_person(info.summary)
+                
                 data = {
                     'conversation_id': info.conversation_id,
                     'start_time': info.start_time,
@@ -125,7 +157,8 @@ def get_agent_conversations(agent_id: str) -> pd.DataFrame:
                     'message_count': conv.message_count,
                     'status': conv.status,
                     'agent_name': conv.agent_name,
-                    'agent_id': agent_id
+                    'agent_id': agent_id,
+                    'person': person
                 }
                 conversation_data.append(data)
                 # Store in Supabase
@@ -150,4 +183,4 @@ if __name__ == "__main__":
     print("\nConversation Overview:")
     print(f"Total conversations: {len(df)}")
     print("\nSample of conversations:")
-    print(df[['conversation_id', 'start_time', 'call_duration_secs', 'summary']].head())
+    print(df[['conversation_id', 'start_time', 'call_duration_secs', 'summary', 'person']].head())
