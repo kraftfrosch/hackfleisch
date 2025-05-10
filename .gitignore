@@ -1,3 +1,5 @@
+.env
+.idea
 # all jupyter notebooks
 *.ipynb
 
@@ -6,3 +8,4 @@ __pycache__/*
 
 
 .env
+
