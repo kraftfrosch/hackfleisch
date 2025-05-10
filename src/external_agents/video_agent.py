@@ -8,11 +8,13 @@ from livekit.plugins import (
     deepgram,
     noise_cancellation,
     silero,
+    bey
 )
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
-
+# from livekit.plugins.bey import start_bey_avatar_session
 load_dotenv(override=True)
-
+from datetime import datetime
+import json
 
 class ConversationBot(Agent):
     def __init__(self, system_prompt: str = "You are a friendly and helpful AI assistant.") -> None:
@@ -43,9 +45,23 @@ class ConversationBot(Agent):
 
 
 async def entrypoint(ctx: agents.JobContext):
+
+    async def write_transcript():
+        current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # This example writes to the temporary directory, but you can save to any location
+        filename = f"Transcript/transcript_{ctx.room.name}_{current_date}.json"
+        
+        with open(filename, 'w') as f:
+            json.dump(local_agent_session.history.to_dict(), f, indent=2)
+            
+        print(f"Transcript for {ctx.room.name} saved to {filename}")
+
+    ctx.add_shutdown_callback(write_transcript)
     await ctx.connect()
 
-    session = AgentSession(
+    ## Use a male voice
+    local_agent_session  = AgentSession(
         stt=deepgram.STT(model="nova-3", language="multi"),
         llm=openai.LLM(model="gpt-4"),
         tts=cartesia.TTS(),
@@ -60,7 +76,10 @@ async def entrypoint(ctx: agents.JobContext):
         Keep your responses concise and engaging. Use a warm and professional tone."""
     )
 
-    await session.start(
+    bey_avatar_session = bey.AvatarSession()
+
+    await bey_avatar_session.start(local_agent_session, room=ctx.room)
+    await local_agent_session.start(
         room=ctx.room,
         agent=bot,
         room_input_options=RoomInputOptions(
