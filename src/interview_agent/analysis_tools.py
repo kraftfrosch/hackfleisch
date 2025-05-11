@@ -1,6 +1,8 @@
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from supabase_client import SUPABASE_CLIENT
+#from database_utils.save_transcriptions import get_agent_conversations
+
 
 import ast
 import json
@@ -38,6 +40,9 @@ def get_feedback_transcripts(employee_name: str) -> list[str] | str:
     Returns:
         list[str]: A list of strings containing the transcripts of the last n conducted feedback interviews about the employee
     """
+    # agent_id = "Ye15B53h9unEaOVXYnKi"
+    # df = get_agent_conversations(agent_id)
+
     response = SUPABASE_CLIENT.table("hack_conversations").select("transcript").eq("about_employee_name", employee_name).execute()
     if len(response.data) >= 1:
         response = [convert_transcript_to_text(transcript) for transcript in response.data]
@@ -51,7 +56,7 @@ from typing import Literal
 class Justification(BaseModel):
     type: Literal["positive", "negative", "actionable_advice"] = Field(description="The type of justification: positive for justifiactions that support the competency rating, negative for justifications that point out missing competencies for the next level, actionable_advice for justifications that provide advice on how to improve the competency.")
     justification: str = Field(description="The one sentence justification of the competency rating")
-    quote: str = Field(description="A short quote from the transcript that supports the justification")
+    direct_quote: str = Field(description="A short direct quote from the transcript that supports the justification")
 
 class CompetencyRating(BaseModel):
     competency_name: str = Field(description="The name of the competency")
@@ -59,13 +64,17 @@ class CompetencyRating(BaseModel):
     employee_level: int = Field(description="The level of the employee between 1 and 4")
     justifications: list[Justification] = Field(description="The justifications for the competency rating")
 
+class OverallRating(BaseModel):
+    employee_name: str = Field(description="The name of the employee")
+    competency_ratings: list[CompetencyRating] = Field(description="A list of all competency rating objects for the employee")
 
-@tool("gives_competency_rating", args_schema={"employee_name": str, "competency_ratings": list[CompetencyRating]})
+
+@tool("gives_competency_rating", args_schema=OverallRating)
 def gives_competency_rating(employee_name: str, competency_ratings: list[CompetencyRating]) -> str:
     """
     Give an employee a rating for each competency based on the competency descriptions and transcripts of the feedback conversations.
 
-    The rating should be created by comparing the feedback conversations to the competency descriptions and the employee's level and next level in the competency model. The rating is paired with justifications which make clear why the rating was given and provide actionabel feedback for the employee based on quotes from the human during the conversation.
+    The rating should be created by comparing the feedback conversations to the competency descriptions and the employee's level and next level in the competency model. The rating is paired with justifications which make clear why the rating was given and provide actionabel feedback for the employee based on direct_quotes from the human during the conversation.
 
     Returns:
         str: A string containing the competency rating
@@ -76,8 +85,8 @@ def gives_competency_rating(employee_name: str, competency_ratings: list[Compete
                 f"competency_name{i+1}": competency_rating.competency_name,
                 f"competency_description{i+1}": competency_rating.competency_description,
                 f"competency_currentlevel{i+1}": competency_rating.employee_level,
-                f"justifications{i+1}": [justification.model_dump() for justification in competency_rating.justifications]
-            }).eq("name", employee_name).execute()
+                f"justification{i+1}": [justification.model_dump() for justification in competency_rating.justifications]
+            }).eq("Name", employee_name).execute()
     except Exception as e:
         return f"Error giving competency ratings: {e}"
 

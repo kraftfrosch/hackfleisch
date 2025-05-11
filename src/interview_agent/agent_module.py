@@ -3,6 +3,7 @@ from langchain_core.messages import SystemMessage
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from questionnair_tool import conduct_feedback, get_employee_context, get_basic_employees_list
+from analysis_tools import get_feedback_transcripts, gives_competency_rating
 from memory import (
     WRAP_FUNCTION_MAPPING,
     MemoryItem,
@@ -46,7 +47,7 @@ def run_agent(user_input: str, chat_id: int) -> str:
         ]
     
     # Define the tools
-    tools = [conduct_feedback, get_employee_context, get_basic_employees_list]
+    tools = [conduct_feedback, get_employee_context, get_basic_employees_list, get_feedback_transcripts, gives_competency_rating]
     prompt = hub.pull("hwchase17/openai-tools-agent")
 
     # Create the agent
