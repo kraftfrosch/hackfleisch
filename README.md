@@ -1,4 +1,4 @@
-# PEOPLEWORKS - AI-Powered Performance Review System
+# PEOPLEWORKS - AI-Powered Peer Review System
 
 An intelligent system that automates the feedback pipeline -- end-to-end.
 
@@ -9,9 +9,10 @@ We offer:
 
 ## Screenshots
 
-![Team View](images/team.png)
-![Chat Interface](images/chat.png)
-![Evaluation Dashboard](images/eval.png)
+| Team View                          | Chat Interface                       | Evaluation Dashboard             |
+|:----------------------------------:|:------------------------------------:|:--------------------------------:|
+| ![Team View](images/team.png)      | ![Chat Interface](images/chat.png)   | ![Eval Dashboard](images/eval.png) |
+
 
 ## Project Structure
 
