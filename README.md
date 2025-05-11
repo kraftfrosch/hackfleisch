@@ -1,6 +1,15 @@
-# Hackfleisch - AI-Powered Interview System
+# PEOPLEWORKS - AI-Powered Performance Review System
 
-An intelligent interview system that combines ElevenLabs voice synthesis with a FastAPI backend for conducting automated interviews and feedback sessions.
+An intelligent system that automates the feedback pipeline -- end-to-end.
+
+We offer:
+- A system to manage and view the growth of your group.
+- An agent-driven system to automatically conduct feedback interviews.
+- An agent-driven flow to convert unstructured interview transcripts to intuitive graphs and visualizations.
+
+## Screenshots
+
+[Add screenshots of the application interface here]
 
 ## Project Structure
 
@@ -20,7 +29,6 @@ hackfleisch/
 
 - Python 3.8+
 - Node.js 16+
-- Conda environment (cdtmhack)
 - ElevenLabs API key
 
 ## Setup
@@ -40,7 +48,7 @@ pip install -r requirements.txt
 
 3. Install Node.js dependencies:
 ```bash
-npm install
+npm install @fastify/formbody @fastify/websocket dotenv fastify ws twilio
 ```
 
 4. Set up environment variables:
@@ -76,10 +84,6 @@ uvicorn main:app --reload
 - Real-time interview processing
 - Competency assessment and feedback analysis
 - Database integration for storing interview data
-
-## Screenshots
-
-[Add screenshots of the application interface here]
 
 ## Contributing
 
