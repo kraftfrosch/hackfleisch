@@ -182,6 +182,7 @@ def conduct_feedback(questionnaire_id: int, employee_name: str, employee_info:st
         print("=" * 80)
 
         successes.append(response)
+        break
 
     return f"Calls successful: {str(successes)}"
 
