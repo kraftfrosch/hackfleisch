@@ -56,7 +56,7 @@ from typing import Literal
 class Justification(BaseModel):
     type: Literal["positive", "negative", "actionable_advice"] = Field(description="The type of justification: positive for justifiactions that support the competency rating, negative for justifications that point out missing competencies for the next level, actionable_advice for justifications that provide advice on how to improve the competency.")
     justification: str = Field(description="The one sentence justification of the competency rating. Make is very consice and to the point.")
-    quote: str = Field(description="A short quote from the transcript that supports the justification")
+    direct_quote: str | None = Field(description="A short direct quote from the transcript that supports the justification. Keep it short and concise.")
 
 class CompetencyRating(BaseModel):
     competency_name: str = Field(description="The name of the competency")
@@ -72,9 +72,10 @@ class OverallRating(BaseModel):
 @tool("gives_competency_rating", args_schema=OverallRating)
 def gives_competency_rating(employee_name: str, competency_ratings: list[CompetencyRating]) -> str:
     """
-    Give an employee a rating for each competency based on the competency descriptions and transcripts of the feedback conversations.
+    Give an employee a rating for each of their four competencies based on the competency descriptions and what can be inferred about their level from the transcripts of the feedback conversations talking about them.
 
-    The rating should be created by comparing the feedback conversations to the competency descriptions and the employee's level and next level in the competency model. The rating is paired with justifications which make clear why the rating was given and provide actionabel feedback for the employee based on direct_quotes from the human during the conversation.
+    The rating should be created by comparing the feedback conversations to the competency descriptions and the employee's level and next level in the competency model and see where the employee currently fits in best. The rating is paired with justifications which make clear why the rating was given or provide actionabel feedback for the employee.
+    When possible include quotes from the transcripts (only from the human) to support the justification.
 
     Returns:
         str: A string containing the competency rating
