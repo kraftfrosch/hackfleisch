@@ -113,7 +113,7 @@ def ensure_hack_conversations_table():
             status text,
             agent_name text,
             agent_id text,
-            person text
+            about_employee_name text
         );
         """
         supabase.rpc('exec_sql', {'query': create_table_query}).execute()
@@ -188,7 +188,7 @@ def get_agent_conversations(agent_id: str) -> pd.DataFrame:
                     'status': conv.status,
                     'agent_name': conv.agent_name,
                     'agent_id': agent_id,
-                    'person': person
+                    'about_employee_name': person
                 }
                 conversation_data.append(data)
                 # Store in Supabase
@@ -213,4 +213,4 @@ if __name__ == "__main__":
     print("\nConversation Overview:")
     print(f"Total conversations: {len(df)}")
     print("\nSample of conversations:")
-    print(df[['conversation_id', 'start_time', 'call_duration_secs', 'summary', 'person']].head())
+    print(df[['conversation_id', 'start_time', 'call_duration_secs', 'summary', 'about_employee_name']].head())

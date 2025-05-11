@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from questionnair_tool import conduct_feedback, get_employee_context
+from questionnair_tool import conduct_feedback, get_employee_context, get_basic_employees_list
 from memory import (
     WRAP_FUNCTION_MAPPING,
     MemoryItem,
@@ -22,7 +22,9 @@ from langchain import hub
 # Define the system message
 system_message = """You are an expert HR assistant specialized in feedback management. Your main job is to assist the user with feedback management.
 You have tools to access the employee informations, create feedback and send feedback calls to people.
-Use create questionaire to make a questionaire for an employee and send the feedback collection over via call. To get employee data, use get_employee_context."""
+Use create questionaire to make a questionaire for an employee and send the feedback collection over via call. To get employee data, use get_employee_context.
+Whenever conducting feedback, explicity clarify who should be doing the feedback for the person. Use get_basic_employees_list to get the full org. Fetch the phone numbers using this.
+RELY HEAVILY ON FETCHING FROM THE DATABASE"""
 
 # Create the prompt template
 # prompt = ChatPromptTemplate.from_messages([
@@ -44,7 +46,7 @@ def run_agent(user_input: str, chat_id: int) -> str:
         ]
     
     # Define the tools
-    tools = [conduct_feedback, get_employee_context]
+    tools = [conduct_feedback, get_employee_context, get_basic_employees_list]
     prompt = hub.pull("hwchase17/openai-tools-agent")
 
     # Create the agent
@@ -67,4 +69,4 @@ def run_agent(user_input: str, chat_id: int) -> str:
 
 
 if __name__ == '__main__':
-    run_agent('What info do you need?', 1)
+    print(run_agent('Can you get feedback from all of Vishwas team members', 11))
