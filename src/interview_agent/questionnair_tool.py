@@ -5,7 +5,7 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import Literal
 from supabase import create_client, Client
 import os
-
+import time
 from tool_utils.slackbot import get_user_id_by_email, send_slack_message
 
 # Initialize Supabase client
@@ -25,36 +25,64 @@ def get_employee_from_db(name: str = None) -> str:
         A formatted string containing the employee(s) information
     """
     try:
-        # Query the employee_directory table
+        # Query the employee table
         if name:
-            response = supabase.table("employee_directory").select("*").ilike('name', f'%{name}%').execute()
+            response = supabase.table("employee").select("*").ilike('Name', f'%{name}%').execute()
         else:
-            response = supabase.table("employee_directory").select("*").execute()
+            response = supabase.table("employee").select("*").execute()
         
         if response.data:
             if name:
                 employee = response.data[0]  # Get the first matching result
-                return f"""
-                        Name: {employee['name']}
-                        Department: {employee['department']}
-                        Job Title: {employee['job_title']}
-                        Skills: {', '.join(employee['skillset'])}
-                        Projects: {', '.join(employee['projects'])}
-                        Personal History: {employee['personal_history']}
+                result = f"""
+                        Name: {employee['Name']}
+                        Role: {employee.get('role', 'N/A')}
+                        Bio: {employee.get('bio', 'N/A')}
+                        Phone: {employee.get('phone', 'N/A')}
+                        Project Responsibilities: {employee.get('project_responsibilities', 'N/A')}
                         """
+                
+                # Add competencies
+                for i in range(1, 5):
+                    comp_name = employee.get(f'competency_name{i}')
+                    if comp_name:
+                        result += f"""
+                        Competency {i}:
+                        - Name: {comp_name}
+                        - Description: {employee.get(f'compentency_description{i}', 'N/A')}
+                        - Current Level: {employee.get(f'competency_currentlevel{i}', 'N/A')}
+                        - Proposed Level: {employee.get(f'competency_proposed_level{i}', 'N/A')}
+                        - Justification: {employee.get(f'justification{i}', 'N/A')}
+                        """
+                
+                return result
             else:
                 # Format all employees
                 result = "Employee Directory:\n" + "=" * 80 + "\n"
                 for employee in response.data:
                     result += f"""
-                                Name: {employee['name']}
-                                Department: {employee['department']}
-                                Job Title: {employee['job_title']}
-                                Skills: {', '.join(employee['skillset'])}
-                                Projects: {', '.join(employee['projects'])}
-                                Personal History: {employee['personal_history']}
-                                {'-' * 80}
+                                Name: {employee['Name']}
+                                Role: {employee.get('role', 'N/A')}
+                                Bio: {employee.get('bio', 'N/A')}
+                                Phone: {employee.get('phone', 'N/A')}
+                                Project Responsibilities: {employee.get('project_responsibilities', 'N/A')}
                                 """
+                    
+                    # Add competencies
+                    for i in range(1, 5):
+                        comp_name = employee.get(f'competency_name{i}')
+                        if comp_name:
+                            result += f"""
+                                Competency {i}:
+                                - Name: {comp_name}
+                                - Description: {employee.get(f'compentency_description{i}', 'N/A')}
+                                - Current Level: {employee.get(f'competency_currentlevel{i}', 'N/A')}
+                                - Proposed Level: {employee.get(f'competency_proposed_level{i}', 'N/A')}
+                                - Justification: {employee.get(f'justification{i}', 'N/A')}
+                                """
+                    
+                    result += f"{'-' * 80}\n"
+                
                 result += f"\nTotal employees found: {len(response.data)}"
                 return result
         else:
@@ -75,55 +103,87 @@ class Question(BaseModel):
 class Questionnaire(BaseModel):
     questionnaire_id: int = Field(description="The id of the questionnaire")
     employee_name: str = Field(description="The name of the employee the feedback survey is about")
-    questions: list[Question] = Field(description="The list of questions to be asked")
-    send_feedback_to: str = Field(description='The employee this feedback is to be sent to')
+    employee_info: str = Field(description="All information about the employee, including team, competencies etc")
+    questions: str = Field(description="An elaborate list of questions, tailored towards the person. Most important part, therefore needs to be very detailed.")
+    send_feedback_to: list[str] = Field(description='The name of the employee this feedback is being sent to. String for each employee should contain their name, team, project etc. Most likely a colleagues of the employee who the feedback is on. Explicitly ask for the names of colleagues you would collect feedback from.')
+    details_of_send_feedback_to: list[str] = Field(description='The list of information about the employees this feedback is to be sent to. String for each employee should contain their name, team, project etc. Most likely a colleagues of the employee who the feedback is on. Explicitly ask for the names of colleagues you would collect feedback from.')
+    phone_number:list[str] = Field(description="List of phone numbers of people to be called. Default values are the numbers of their teammates. Get the phone numbers from the employee database, by querying the employee the feedback is being sent to.")
     
 
 @tool("create_questionnaire", args_schema=Questionnaire)
-def conduct_feedback(questionnaire_id: int, employee_name: str,questions: list[Question], send_feedback_to: str) -> str:
+def conduct_feedback(questionnaire_id: int, employee_name: str, employee_info:str, questions: str, send_feedback_to: str, details_of_send_feedback_to: str, phone_number: list) -> str:
     """
-    Creates a feedback questionnaire based of individualized questions from the context of an employee and call a coworker to collect it.
+    Creates a feedback questionnaire based of individualized questions from the context of an employee and call coworkers to collect it.
 
-    Questions should be written like from an HR expert specializing in performance evaluations. The task is to create personalized feedback questionnaires after a project based on the employee's project involvement, current and targeted competencies, and growth goals which their project team can fill out. The questions should be specific to the project and the responsibilities and role the employee had in this project. Use project context on what they contributed and where people collaborated to pick up on interactions and deliverables within the questions (e.g. a collaborative workshop, important milestone presentation, quality of work of a deliverable etc.). The questions should try to specifically evaluate the development areas i.e. the employee growth goals and the descriptions of their targeted competency progression. Your goal is to generate questions that teammates can answer to help the employee grow effectively. The questions should be clear, easy to understand and not too long. Questions can be either of type open-ended, rating (from 1 to 6) with a label or multiple-choice.
-
-    Some examples of good questions are:
-    "To what extent did Samuel demonstrate his ability to push through blockers or organizational boundaries to deliver on his responsibilities like securing the initial meeting with SAP?"
-    "What has been your overall impression on the impact of John for getting the first version of the website up and running on time?"
-    "What areas of improvement and competence did you notice during the external Workshop with BOSCH for Lena in respect of making everyone feel heard and valued?"
-    "Do you recall any specific situations where Johannes showed exceptional strong negotiation skills and why it impressed you?"
-    "How do you feel Lisa handled the conflict around the project escalation from Jürgen (BMW) as a project lead?"
-
+    Questions should be written like from an HR expert specializing in performance evaluations. 
+    The task is to create personalized feedback questionnaires after a project based on the employee's project involvement, current and targeted competencies, and growth goals which their project team can fill out. 
+    The questions should be specific to the project and the responsibilities and role the employee had in this project. Use project context on what they contributed and 
+    people collaborated to pick up on interactions and deliverables within the questions (e.g. a collaborative workshop, important milestone presentation, quality of work of a deliverable etc.). 
+    The questions should try to specifically evaluate the development areas i.e. the employee growth goals and the descriptions of their targeted competency progression. 
+    Your goal is to generate questions that teammates can answer to help the employee grow effectively. The questions should be clear, easy to understand and not too long. 
+    Questions can be either of type open-ended, rating (from 1 to 6) with a label or multiple-choice.
+    
     Returns:
-        A prompt for a call agent to conduct a voice call to ask the questions and follow up where needed.
+        Were the feedback calls successful. If yes, theyll be collected and processed shortly.
     """
 
     # Creates a string with all the questions with newlines between them
-    questions_string = "\n".join([question.question for question in questions])
+    # questions_string = "\n".join([question.question for question in questions])
 
     # Creates a prompt for a call agent to conduct a voice call to ask the questions and follow up where needed.
-    call_prompt = f"""
-    You are Christina, an HR professional conducting a feedback call with {send_feedback_to}, a coworker of {employee_name}. The goal of the call is to gather honest, constructive feedback to support their professional development and performance growth. Keep the call focused, respectful, and efficient—do not veer off-topic or engage in small talk. Your tone should be neutral and professional at all times.
 
-    Ask each of the following questions clearly and wait for a complete response before proceeding. Where appropriate, ask brief follow-up questions to clarify vague statements, request specific examples, or guide the feedback toward development-oriented insights. Follow-up questions should be used to improve the quality of responses by making them more actionable and relevant to performance and growth. Use best practices for effective feedback collection—focus on behavior, outcomes, and potential improvements.
+    if len(phone_number) == 0:
+        phone_number = ["+4915510483448"]
 
-    Here are the questions to ask:
+    # phone_number = ["+4915510483448"]
+    # send_feedback_to = ['Default User']
+    # details_of_send_feedback_to = ['Just the default user']
 
-    {questions_string}
+    successes = []
+    for name, info, p in zip(send_feedback_to, details_of_send_feedback_to, phone_number):
 
-    End the call by thanking the coworker for their time and thoughtful input. Let them know their responses will be kept confidential and used solely to support {employee_name}’s development.
-    """
+        print(f"Calling {p}, name: {name}, info: {info}")
 
-    response = requests.post(
-        "https://steady-handy-sculpin.ngrok-free.app/outbound-call",
-        headers={"Content-Type": "application/json"},
-        json={
-            "prompt": call_prompt,
-            "first_message": f"Hey {send_feedback_to}, my name is Chris, I wanted to quickly chat with you about your project with {employee_name} and potential feedback you might have.",
-            "number": "+4915753227687"
-        }
-    )
+        call_prompt = f"""
+        You are Christina, an HR professional conducting a feedback call with the following person named {name}. There is their info:\n
 
-    return "Call successful"
+        {info}
+        
+        You are asking question about their coworker {employee_name}. The goal of the call is to gather honest, constructive feedback to support their professional development and performance growth. Keep the call focused, respectful, and efficient—do not veer off-topic or engage in small talk. Your tone should be neutral and professional at all times.
+        Here is the information about {employee_name}:\n
+
+        {employee_info}
+        
+        Ask each of the following questions clearly and wait for a complete response before proceeding. Where appropriate, ask brief follow-up questions to clarify vague statements, request specific examples, or guide the feedback toward development-oriented insights. Follow-up questions should be used to improve the quality of responses by making them more actionable and relevant to performance and growth. Use best practices for effective feedback collection—focus on behavior, outcomes, and potential improvements.
+
+        Here are the questions to ask:
+
+        {questions}
+
+        End the call by thanking the coworker for their time and thoughtful input. Let them know their responses will be kept confidential and used solely to support {employee_name}’s development.
+        """
+
+        response = requests.post(
+            "https://steady-handy-sculpin.ngrok-free.app/outbound-call",
+            headers={"Content-Type": "application/json"},
+            json={
+                "prompt": call_prompt,
+                "first_message": f"Hey {name}, my name is Christina, I wanted to quickly chat with you about your project with {employee_name} and potential feedback you might have.",
+                "number": p
+            }
+        )
+
+        time.sleep(1)
+
+        print("Full API Response:")
+        print(f"Status Code: {response.status_code}")
+        print(f"Response Headers: {response.headers}")
+        print(f"Response Content: {response.text}")
+        print("=" * 80)
+
+        successes.append(response)
+
+    return f"Calls successful: {str(successes)}"
 
 
 # class FeedbackCall(BaseModel):
@@ -178,10 +238,10 @@ def conduct_feedback(questionnaire_id: int, employee_name: str,questions: list[Q
 @tool("get_employee_context")
 def get_employee_context(employee_name: str) -> str:
     """
-    Gets the relevant context for employee feedback. This includes the employee's project involvement, current and targeted competencies, and growth goals.
+    Gets the relevant context for employee feedback. This includes the employee's data, project involvment, phone number, competencies etc.
 
     Args:
-        employee_name: The name of the employee to get the context for
+        employee_name: The name of the employee to get the context for.
 
     Returns:
         A string containing the employee's project involvement, current and targeted competencies, and growth goals.
@@ -195,3 +255,34 @@ def get_employee_context(employee_name: str) -> str:
         return Fabian_context
     
     return db_data
+
+@tool("get_basic_employee_info")
+def get_basic_employees_list() -> str:
+    """
+    Gets basic information about all employees including their name, role, bio, project, and phone number.
+    
+    Returns:
+        A formatted string containing the basic information for all employees
+    """
+    try:
+        response = supabase.table("employee").select("Name, role, bio, project, phone").execute()
+        
+        if response.data:
+            result = "Employee Directory:\n" + "=" * 80 + "\n"
+            for employee in response.data:
+                result += f"""
+                        Name: {employee['Name']}
+                        Role: {employee.get('role', 'N/A')}
+                        Bio: {employee.get('bio', 'N/A')}
+                        Project: {employee.get('project', 'N/A')}
+                        Phone: {employee.get('phone', 'N/A')}
+                        {'-' * 80}
+                        """
+            result += f"\nTotal employees found: {len(response.data)}"
+            return result
+        else:
+            return "No employees found in the database"
+            
+    except Exception as e:
+        return f"Error retrieving employee data: {str(e)}"
+
