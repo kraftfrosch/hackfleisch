@@ -60,8 +60,8 @@ class CompetencyRating(BaseModel):
     justifications: list[Justification] = Field(description="The justifications for the competency rating")
 
 
-@tool("gives_competency_rating", args_schema=list[CompetencyRating])
-def gives_competency_rating(competency_ratings: list[CompetencyRating]) -> str:
+@tool("gives_competency_rating", args_schema={"employee_name": str, "competency_ratings": list[CompetencyRating]})
+def gives_competency_rating(employee_name: str, competency_ratings: list[CompetencyRating]) -> str:
     """
     Give an employee a rating for each competency based on the competency descriptions and transcripts of the feedback conversations.
 
@@ -72,12 +72,12 @@ def gives_competency_rating(competency_ratings: list[CompetencyRating]) -> str:
     """
     try:
         for i, competency_rating in enumerate(competency_ratings):
-            SUPABASE_CLIENT.table("employee").insert({
+            SUPABASE_CLIENT.table("employee").update({
                 f"competency_name{i+1}": competency_rating.competency_name,
                 f"competency_description{i+1}": competency_rating.competency_description,
                 f"competency_currentlevel{i+1}": competency_rating.employee_level,
                 f"justifications{i+1}": [justification.model_dump() for justification in competency_rating.justifications]
-            }).execute()
+            }).eq("name", employee_name).execute()
     except Exception as e:
         return f"Error giving competency ratings: {e}"
 
