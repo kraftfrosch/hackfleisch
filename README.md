@@ -9,7 +9,9 @@ We offer:
 
 ## Screenshots
 
-[Add screenshots of the application interface here]
+![Team View](images/team.png)
+![Chat Interface](images/chat.png)
+![Evaluation Dashboard](images/eval.png)
 
 ## Project Structure
 
