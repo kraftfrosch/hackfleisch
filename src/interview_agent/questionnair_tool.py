@@ -103,10 +103,10 @@ class Question(BaseModel):
 class Questionnaire(BaseModel):
     questionnaire_id: int = Field(description="The id of the questionnaire")
     employee_name: str = Field(description="The name of the employee the feedback survey is about")
-    employee_info: str = Field(description="All information about the employee, including team, competencies etc")
+    employee_info: str = Field(description="One sentence info about the employee")
     questions: str = Field(description="An elaborate list of questions, tailored towards the person. Most important part, therefore needs to be very detailed.")
     send_feedback_to: list[str] = Field(description='The name of the employee this feedback is being sent to. String for each employee should contain their name, team, project etc. Most likely a colleagues of the employee who the feedback is on. Explicitly ask for the names of colleagues you would collect feedback from.')
-    details_of_send_feedback_to: list[str] = Field(description='The list of information about the employees this feedback is to be sent to. String for each employee should contain their name, team, project etc. Most likely a colleagues of the employee who the feedback is on. Explicitly ask for the names of colleagues you would collect feedback from.')
+    details_of_send_feedback_to: list[str] = Field(description='The list of 3-4 word info about the employees this feedback is to be sent to. Summarize heavily. Most likely a colleagues of the employee who the feedback is on. Explicitly ask for the names of colleagues you would collect feedback from.')
     phone_number:list[str] = Field(description="List of phone numbers of people to be called. Default values are the numbers of their teammates. Get the phone numbers from the employee database, by querying the employee the feedback is being sent to.")
     
 

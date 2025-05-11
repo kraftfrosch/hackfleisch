@@ -10,9 +10,10 @@ import json
 def convert_transcript_to_text(transcript_obj):
     # Extract the string containing the list of messages
     transcript_str = transcript_obj['transcript']
+    print(transcript_str)
     
     # Convert the string representation of a list of dicts into an actual Python list
-    transcript_list = ast.literal_eval(transcript_str)
+    transcript_list = json.loads(transcript_str)
     
     # Initialize an empty list to collect the lines of conversation
     conversation = []

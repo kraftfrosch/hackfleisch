@@ -24,7 +24,7 @@ def classify_person(summary: str) -> str:
         summary (str): The conversation summary
         
     Returns:
-        str: The identified person's name
+        str: The identified person's name who is mentioned
     """
     candidate_labels = ["Vishwa", "Johannes", "Joshua", "Fabian", "Unknown", "Lena", "Julian", "Henri", "Joel"]
     
@@ -174,9 +174,11 @@ def get_agent_conversations(agent_id: str) -> pd.DataFrame:
         if conv.agent_id == agent_id:
             try:
                 info = get_conversation_info(conv.conversation_id)
+                if info.call_duration < 30:
+                    ## Skip conversations that are too short
+                    continue
                 # Classify the person in the conversation
                 person = classify_person(info.summary)
-                
                 data = {
                     'conversation_id': info.conversation_id,
                     'start_time': info.start_time,
@@ -198,7 +200,6 @@ def get_agent_conversations(agent_id: str) -> pd.DataFrame:
     
     # Create DataFrame for local reference
     df = pd.DataFrame(conversation_data)
-    
     # Sort by start time
     df = df.sort_values('start_time', ascending=False)
     
