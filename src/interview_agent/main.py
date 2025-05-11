@@ -12,6 +12,7 @@ from memory import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
+from database_utils.save_transcriptions import get_agent_conversations
 
 app = FastAPI()
 app.add_middleware(
@@ -51,3 +52,12 @@ async def invoke_agent(request: AgentRequest):
 @app.get("/")
 def read_root():
     return {"message": "LangChain HR Agent is running"}
+
+@app.get("/fetch_information")
+async def fetch_information():
+    '''
+    Fetch all the conversations from Eleven labs to Supabase
+    '''
+    agent_id = "Ye15B53h9unEaOVXYnKi"
+    df = get_agent_conversations(agent_id)
+    return df.to_dict(orient="records")

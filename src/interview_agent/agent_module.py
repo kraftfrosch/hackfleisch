@@ -70,4 +70,4 @@ def run_agent(user_input: str, chat_id: int) -> str:
 
 
 if __name__ == '__main__':
-    print(run_agent('Can you gather the transcripts from Fabian and give a competency rating for him', 12))
+    print(run_agent('Can you gather the transcripts from Joel and give a competency rating for him', 12))

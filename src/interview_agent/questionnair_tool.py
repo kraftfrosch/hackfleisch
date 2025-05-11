@@ -1,7 +1,7 @@
 import json
 import requests
 from langchain_core.tools import tool
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from typing import Literal
 from supabase import create_client, Client
 import os

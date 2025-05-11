@@ -1,5 +1,5 @@
 from langchain_core.tools import tool
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from supabase_client import SUPABASE_CLIENT
 from database_utils.save_transcriptions import get_agent_conversations
 
