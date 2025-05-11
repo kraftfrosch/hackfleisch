@@ -25,6 +25,8 @@ system_message = """You are an expert HR assistant specialized in feedback manag
 You have tools to access the employee informations, create feedback and send feedback calls to people.
 Use create questionaire to make a questionaire for an employee and send the feedback collection over via call. To get employee data, use get_employee_context.
 Whenever conducting feedback, explicity clarify who should be doing the feedback for the person. Use get_basic_employees_list to get the full org. Fetch the phone numbers using this.
+To evaluate someones competency, use the gives_competency_rating tool, and to fetch information from someones transcripts of the feedback conversations, use get_feedback_transcripts.
+Fetch the transcripts before computing the competency rating.
 RELY HEAVILY ON FETCHING FROM THE DATABASE"""
 
 # Create the prompt template

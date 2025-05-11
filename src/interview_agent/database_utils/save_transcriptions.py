@@ -6,7 +6,11 @@ from datetime import datetime
 from supabase import create_client, Client
 import os
 import json
-from transformers import pipeline
+# from transformers import pipeline
+from langchain_openai import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from enum import Enum
+from typing import Literal
 
 # Initialize Supabase client
 db_web_link = "https://hkqvoplmxbycptpqjghe.supabase.co"
@@ -14,32 +18,74 @@ keyy = os.getenv('SUPABASE_KEY', "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 supabase: Client = create_client(db_web_link, keyy)
 
 # Initialize zero-shot classifier
-classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+# classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+
+class PersonName(str, Enum):
+    VISHWA = "Vishwa"
+    JOHANNES = "Johannes"
+    JOSHUA = "Joshua"
+    FABIAN = "Fabian"
+    LENA = "Lena"
+    JULIAN = "Julian"
+    HENRI = "Henri"
+    JOEL = "Joel"
+    UNKNOWN = "Unknown"
+
+# Initialize OpenAI client
+llm = ChatOpenAI(
+    model="gpt-4o",
+    temperature=0,
+    api_key=os.getenv('OPENAI_API_KEY')
+)
 
 def classify_person(summary: str) -> str:
     """
-    Use zero-shot classification to identify the person in the conversation.
+    Use OpenAI function calling to identify the person being assessed in the interview.
     
     Args:
         summary (str): The conversation summary
         
     Returns:
-        str: The identified person's name who is mentioned
+        str: The name of the person being assessed
     """
-    candidate_labels = ["Vishwa", "Johannes", "Joshua", "Fabian", "Unknown", "Lena", "Julian", "Henri", "Joel"]
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful assistant that identifies people in interview summaries. Identify the person being assessed/evaluated in the interview."),
+        ("user", "Here is the interview summary: {summary}")
+    ])
     
-    # Get classification results
-    result = classifier(summary, candidate_labels)
+    # Define the function schema
+    functions = [{
+        "name": "identify_person",
+        "description": "Identify the person being assessed in the interview",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "enum": [name.value for name in PersonName],
+                    "description": "The name of the person being assessed"
+                }
+            },
+            "required": ["name"]
+        }
+    }]
     
-    # Get the label with highest score
-    predicted_label = result['labels'][0]
-    confidence = result['scores'][0]
+    chain = prompt | llm.bind(functions=functions, function_call={"name": "identify_person"})
     
-    # If confidence is too low, return Unknown
-    if confidence < 0.3:
+    try:
+        result = chain.invoke({"summary": summary})
+        # Extract the name from the function call
+        if hasattr(result, 'additional_kwargs') and 'function_call' in result.additional_kwargs:
+            function_call = result.additional_kwargs['function_call']
+            if function_call['name'] == 'identify_person':
+                # Parse the arguments string as JSON
+                arguments = json.loads(function_call['arguments'])
+                name = arguments.get('name', 'Unknown')
+                return name
         return "Unknown"
-    
-    return predicted_label
+    except Exception as e:
+        print(f"Error in classify_person: {str(e)}")
+        return "Unknown"
 
 @dataclass
 class TranscriptInfo:
