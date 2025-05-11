@@ -26,7 +26,7 @@ def classify_person(summary: str) -> str:
     Returns:
         str: The identified person's name
     """
-    candidate_labels = ["Vishwa", "Johannes", "Joshua", "Fabian", "Unknown"]
+    candidate_labels = ["Vishwa", "Johannes", "Joshua", "Fabian", "Unknown", "Lena", "Julian", "Henri", "Joel"]
     
     # Get classification results
     result = classifier(summary, candidate_labels)
