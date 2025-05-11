@@ -1,7 +1,7 @@
 import json
 import requests
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 from typing import Literal
 from supabase import create_client, Client
 import os
@@ -110,7 +110,7 @@ class Questionnaire(BaseModel):
     phone_number:list[str] = Field(description="List of phone numbers of people to be called. Default values are the numbers of their teammates. Get the phone numbers from the employee database, by querying the employee the feedback is being sent to.")
     
 
-@tool("create_questionnaire", args_schema=Questionnaire)
+@tool("conduct_feedback", args_schema=Questionnaire)
 def conduct_feedback(questionnaire_id: int, employee_name: str, employee_info:str, questions: str, send_feedback_to: str, details_of_send_feedback_to: str, phone_number: list) -> str:
     """
     Creates a feedback questionnaire based of individualized questions from the context of an employee and call coworkers to collect it.
@@ -132,8 +132,8 @@ def conduct_feedback(questionnaire_id: int, employee_name: str, employee_info:st
 
     # Creates a prompt for a call agent to conduct a voice call to ask the questions and follow up where needed.
 
-    if len(phone_number) == 0:
-        phone_number = ["+4915510483448"]
+    # if len(phone_number) == 0:
+    #     phone_number = ["+4915510483448"]
 
     # phone_number = ["+4915510483448"]
     # send_feedback_to = ['Default User']
@@ -141,7 +141,6 @@ def conduct_feedback(questionnaire_id: int, employee_name: str, employee_info:st
 
     successes = []
     for name, info, p in zip(send_feedback_to, details_of_send_feedback_to, phone_number):
-
         print(f"Calling {p}, name: {name}, info: {info}")
 
         call_prompt = f"""
@@ -182,7 +181,6 @@ def conduct_feedback(questionnaire_id: int, employee_name: str, employee_info:st
         print("=" * 80)
 
         successes.append(response)
-        break
 
     return f"Calls successful: {str(successes)}"
 

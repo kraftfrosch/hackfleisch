@@ -1,7 +1,7 @@
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 from supabase_client import SUPABASE_CLIENT
-#from database_utils.save_transcriptions import get_agent_conversations
+from database_utils.save_transcriptions import get_agent_conversations
 
 
 import ast
@@ -40,8 +40,8 @@ def get_feedback_transcripts(employee_name: str) -> list[str] | str:
     Returns:
         list[str]: A list of strings containing the transcripts of the last n conducted feedback interviews about the employee
     """
-    # agent_id = "Ye15B53h9unEaOVXYnKi"
-    # df = get_agent_conversations(agent_id)
+    agent_id = "Ye15B53h9unEaOVXYnKi"
+    df = get_agent_conversations(agent_id)
 
     response = SUPABASE_CLIENT.table("hack_conversations").select("transcript").eq("about_employee_name", employee_name).execute()
     if len(response.data) >= 1:

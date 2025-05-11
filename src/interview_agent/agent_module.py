@@ -70,4 +70,4 @@ def run_agent(user_input: str, chat_id: int) -> str:
 
 
 if __name__ == '__main__':
-    print(run_agent('Can you get feedback from all of Vishwas team members', 11))
+    print(run_agent('Tell me about the transcripts for Vishwa', 11))
