@@ -32,13 +32,13 @@ def convert_transcript_to_text(transcript_obj):
 @tool("get_feedback_transcripts")
 def get_feedback_transcripts(employee_name: str) -> list[str] | str:
     """
-    Get the last n conducted feedback interviews about an employee
+    Get all the conducted feedback interview transcripts about an employee
 
     Args:
         employee_name (str): The name of the employee to get feedback transcripts for
 
     Returns:
-        list[str]: A list of strings containing the transcripts of the last n conducted feedback interviews about the employee
+        list[str]: A list of strings containing the transcripts of conducted feedback interviews about the employee
     """
     # agent_id = "Ye15B53h9unEaOVXYnKi"
     # df = get_agent_conversations(agent_id)
@@ -55,8 +55,8 @@ from typing import Literal
 
 class Justification(BaseModel):
     type: Literal["positive", "negative", "actionable_advice"] = Field(description="The type of justification: positive for justifiactions that support the competency rating, negative for justifications that point out missing competencies for the next level, actionable_advice for justifications that provide advice on how to improve the competency.")
-    justification: str = Field(description="The one sentence justification of the competency rating")
-    direct_quote: str = Field(description="A short direct quote from the transcript that supports the justification")
+    justification: str = Field(description="The one sentence justification of the competency rating. Make is very consice and to the point.")
+    quote: str = Field(description="A short quote from the transcript that supports the justification")
 
 class CompetencyRating(BaseModel):
     competency_name: str = Field(description="The name of the competency")
