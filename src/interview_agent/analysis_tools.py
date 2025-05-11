@@ -81,6 +81,8 @@ def gives_competency_rating(employee_name: str, competency_ratings: list[Compete
     Returns:
         str: A string containing the competency rating
     """
+    agent_id = "Ye15B53h9unEaOVXYnKi"
+    df = get_agent_conversations(agent_id)
     try:
         for i, competency_rating in enumerate(competency_ratings):
             SUPABASE_CLIENT.table("employee").update({
