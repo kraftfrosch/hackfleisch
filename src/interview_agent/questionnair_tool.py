@@ -159,7 +159,7 @@ def conduct_feedback(questionnaire_id: int, employee_name: str, employee_info:st
 
         {questions}
 
-        End the call by thanking the coworker for their time and thoughtful input. Let them know their responses will be kept confidential and used solely to support {employee_name}’s development.
+        End the call by thanking the coworker for their time and asking if they have any last shoutout they want to share with {employee_name}. Let them know their responses will be kept confidential and used solely to support {employee_name}’s development.
         """
 
         response = requests.post(
